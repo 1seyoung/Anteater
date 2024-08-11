@@ -1,31 +1,77 @@
 package com.anteater.apigateway.config;
 
 
-
 import com.anteater.apigateway.jwt.JwtFilter;
+import com.anteater.apigateway.handler.JwtAccessDeniedHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 
-@Configuration // Configuration class for security
-@EnableWebFluxSecurity // WebFlux 애플리케이션에서 Spring Security를 활성화 하는 역할
+@Configuration
+@EnableWebFluxSecurity
 public class SecurityConfig {
 
-
-
     private final JwtFilter jwtFilter;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
-    public SecurityConfig(JwtFilter jwtFilter) {
+    public SecurityConfig(JwtFilter jwtFilter, JwtAccessDeniedHandler jwtAccessDeniedHandler) {
         this.jwtFilter = jwtFilter;
+        this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
     }
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http){
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .csrf().disable()
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                // TODO: formLogin is currently enabled for testing purposes.
+                // TODO: Consider disabling it and implementing a custom authentication mechanism
+                // TODO: (e.g., JWT-based authentication) for production use.
+                .authorizeExchange(this::configureAuthorizeExchange)
+                .exceptionHandling(exceptionHandling ->
+                                exceptionHandling.accessDeniedHandler(jwtAccessDeniedHandler)
+                        // TODO: Consider implementing custom JwtAuthenticationEntryPoint
+                        // TODO: for better control over authentication failure responses
+                        // TODO: exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                )
+                .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .build();
+    }
+
+    private void configureAuthorizeExchange(ServerHttpSecurity.AuthorizeExchangeSpec exchanges) {
+        exchanges
+                .pathMatchers("/auth/**", "/public/**").permitAll()
+                .pathMatchers("/admin/**").hasRole("ADMIN")
+                .anyExchange().authenticated();
+    }
+
+    @Bean
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // 프론트엔드 주소
+        corsConfig.setMaxAge(8000L);
+        corsConfig.addAllowedMethod("*");
+        corsConfig.addAllowedHeader("*");
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+
+        return new CorsWebFilter(source);
     }
 }
 

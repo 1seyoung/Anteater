@@ -1,14 +1,101 @@
 package com.anteater.apigateway.handler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Handler for JWT access denied
- * 구독 모델에 적용
- * 프리미엄 콘텐츠에 대한 접근 권한 문제 해결
+ * JWT 인증 과정에서 접근이 거부된 경우를 처리하는 핸들러.
+ * 이 핸들러는 다양한 접근 거부 상황에 대해 적절한 에러 메시지를 생성하고,
+ * JSON 형식의 응답을 클라이언트에게 반환합니다.
  */
-public class JwtAccessDeniedHandler {
+@Component
+public class JwtAccessDeniedHandler implements ServerAccessDeniedHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAccessDeniedHandler.class);
+    private final ObjectMapper objectMapper;
+
+    /**
+     * JwtAccessDeniedHandler 생성자.
+     * @param objectMapper JSON 직렬화를 위한 ObjectMapper
+     */
+    public JwtAccessDeniedHandler(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * 접근이 거부된 요청을 처리합니다.
+     * @param exchange 현재의 서버 웹 교환
+     * @param denied 발생한 AccessDeniedException
+     * @return 처리 결과를 나타내는 Mono<Void>
+     */
+    @Override
+    public Mono<Void> handle(ServerWebExchange exchange, AccessDeniedException denied) {
+        return Mono.defer(() -> {
+            String path = exchange.getRequest().getPath().value();
+            String message = determineErrorMessage(path, denied);
+
+            // 접근 거부 이벤트 로깅
+            logger.warn("Access denied for path: {}. Reason: {}", path, message);
+
+            // 응답 상태 코드와 컨텐츠 타입 설정
+            exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+            exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+            // JSON 응답 본문 생성
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("status", HttpStatus.FORBIDDEN.value());
+            responseBody.put("error", "Forbidden");
+            responseBody.put("message", message);
+            responseBody.put("path", path);
+
+            try {
+                // JSON 응답을 바이트 배열로 변환
+                byte[] responseBytes = objectMapper.writeValueAsBytes(responseBody);
+                DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(responseBytes);
+                // 응답 쓰기
+                return exchange.getResponse().writeWith(Mono.just(buffer));
+            } catch (Exception e) {
+                // JSON 변환 또는 응답 쓰기 중 오류 발생 시 로깅
+                logger.error("Error writing response", e);
+                return Mono.error(e);
+            }
+        });
+    }
+
+    /**
+     * 요청 경로와 예외에 따라 적절한 에러 메시지를 결정합니다.
+     * @param path 요청 경로
+     * @param denied 발생한 AccessDeniedException
+     * @return 결정된 에러 메시지
+     */
+    private String determineErrorMessage(String path, AccessDeniedException denied) {
+        // TODO: API 구현 완료 후 각 경로에 따른 구체적인 메시지 추가
+        if (path.startsWith("/api/admin")) {
+            return "You do not have administrative privileges to access this resource.";
+        } else if (path.startsWith("/api/premium")) {
+            // 구독 관련 메시지
+            return "This feature requires a premium subscription. Please upgrade your account to access.";
+        } else if (denied.getMessage() != null && !denied.getMessage().isEmpty()) {
+            // AccessDeniedException에 메시지가 있는 경우 사용
+            return denied.getMessage();
+        } else {
+            // 기본 메시지
+            return "Access denied. You do not have permission to access this resource.";
+        }
+    }
 }
-
 
 /*
 JWT(Json Web Token)
