@@ -24,6 +24,12 @@ public class RedisConfig {
         RedisClusterConfiguration clusterConfiguration = new RedisClusterConfiguration(
                 Arrays.asList("localhost:6379", "localhost:6380", "localhost:6381")
         );
+        /*
+        @Bean
+        public RedisConnectionFactory redisConnectionFactory() {
+            return new LettuceConnectionFactory(redisProperties.getHost(), redisProperties.getPort());
+            }
+         */
         return new LettuceConnectionFactory(clusterConfiguration);
     }
 

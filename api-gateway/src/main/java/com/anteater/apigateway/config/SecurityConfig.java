@@ -2,21 +2,31 @@ package com.anteater.apigateway.config;
 
 
 
+import com.anteater.apigateway.jwt.JwtFilter;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
 
 @Configuration // Configuration class for security
 @EnableWebFluxSecurity // WebFlux 애플리케이션에서 Spring Security를 활성화 하는 역할
 public class SecurityConfig {
-/*
-TODO auth3: SecurityConfig 설정
-- Spring Security 설정을 위한 SecurityConfig 클래스를 작성한다.
-- SecurityWebFilterChain을 구성하여 특정 경로에 대한 접근 권한을 설정한다.
-- 구독자 전용 리소스는 구독 상태를 확인하고, 구독이 유효하지 않은 경우 접근을 제한한다.
-- JwtFilter를 필터 체인에 추가하여 모든 요청이 필터링되도록 설정한다.
- */
 
+
+
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http){
+        return http
+                .csrf().disable()
+    }
 }
 
 /*
