@@ -3,7 +3,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: travelwithme.mail@gmail.com
-    password: puofrxedultxqtul
+    password: ${MAIL_PASSWORD}  # 환경 변수로 설정된 값 또는 application-secret.yml에서 가져올 값
     properties:
       mail:
         smtp:
@@ -14,4 +14,7 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-    auth-code-expiration-millis: 1800000  # 30 * 60 * 1000 == 30분
+  config:
+    import: application-secret.yml  # application-secret.yml 파일을 추가로 불러옴
+
+auth-code-expiration-millis: 1800000  # 30 * 60 * 1000 == 30분
