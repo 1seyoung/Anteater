@@ -6,15 +6,13 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
-import java.time.Duration;
+
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+
 
 @Component
 public class JwtTokenProvider {
