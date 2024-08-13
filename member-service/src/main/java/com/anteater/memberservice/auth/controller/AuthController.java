@@ -21,6 +21,7 @@ public class AuthController {
     private final AuthService authService;
     private final TokenService tokenService;
 
+
     public AuthController(AuthService authService, TokenService tokenService) {
         this.authService = authService;
         this.tokenService = tokenService;
@@ -53,7 +54,11 @@ public class AuthController {
 
     @PostMapping("/logout-all")
     public ResponseEntity<String> logoutFromAllDevices(@RequestHeader("X-Authenticated-User") String email) {
-        tokenService.logoutFromAllDevices(email);
+        Long userId = authService.getUserIdByEmail(email);
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        tokenService.logoutFromAllDevices(userId);
         return ResponseEntity.ok("Logged out from all devices successfully.");
     }
 

@@ -122,4 +122,8 @@ public class TokenService {
         }
     }
 
+    public void logoutFromAllDevices(Long userId) {
+        // 사용자의 모든 Refresh 토큰을 무효화
+        redisTemplate.delete("refresh_token:" + userId);
+    }
 }

@@ -208,4 +208,10 @@ public class AuthService {
 
         return new ResendActivationResponse("Activation email has been resent", true);
     }
+
+    public Long getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getId)
+                .orElse(null);
+    }
 }
