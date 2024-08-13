@@ -45,17 +45,29 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+
+    @Builder // 빌더 패턴을 사용하여 객체 생성
+    private User(String username, String email, String password, String name, LocalDate birthdate) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.birthdate = birthdate;
+        this.activated = false;
+    }
+
+
     /**
      * 사용자 생성을 위한 정적 팩토리 메서드.
      */
     public static User createUser(String username, String email, String password, String name, LocalDate birthdate) {
-        User user = new User();
-        user.username = username;
-        user.email = email;
-        user.password = password;
-        user.name = name;
-        user.birthdate = birthdate;
-        return user;
+        return User.builder()
+                .username(username)
+                .email(email)
+                .password(password)
+                .name(name)
+                .birthdate(birthdate)
+                .build();
     }
 
     /**
@@ -64,6 +76,10 @@ public class User {
     public void activate() {
         this.activated = true;
         this.subscriptionStatus = SubscriptionStatus.BASIC;
+    }
+
+    public boolean isSubscriptionActive() {
+        return this.subscriptionStatus != SubscriptionStatus.UNACTIVATED;
     }
 
     /**
@@ -93,11 +109,7 @@ public class User {
     }
 }
 
-enum SubscriptionStatus {
-    UNACTIVATED,
-    BASIC,
-    PREMIUM
-}
+
 
 /*
 @Entity : JPA 엔티티임을 나타냄, 클래스는 데이터베이스의 테이블과 연결되어 있으며, 데이터베이스 테이블의 행과 클래스의 객체 매핑됨

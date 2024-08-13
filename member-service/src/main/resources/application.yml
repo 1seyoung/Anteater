@@ -1,3 +1,6 @@
+app:
+  activation-base-url: http://yourdomain.com/activate?token=
+
 spring:
   mail:
     host: smtp.gmail.com

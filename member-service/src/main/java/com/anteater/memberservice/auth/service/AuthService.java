@@ -11,6 +11,9 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.beans.factory.annotation.Value; // 설정 파일에서 값을 가져오기 위한 어노테이션 line146(8.13)
+
+
 /**
  * AuthService는 사용자 인증과 관련된 로직을 처리하는 서비스 클래스입니다.
  * 사용자 등록, 로그인, 토큰 갱신 등의 기능을 제공합니다.
@@ -21,7 +24,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final EmailService emailService;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder; // 비밀번호 암호화를 처리하는 PasswordEncoder -> Security Config 없이 했다가 오류 났었음
     private final TokenService tokenService;
 
     /**
@@ -73,8 +76,9 @@ public class AuthService {
 
         // 계정 활성화를 위한 토큰 생성 및 이메일 발송
         String activationToken = tokenService.generateActivationToken(savedUser.getId());
-        String activationLink = "http://yourdomain.com/activate?token=" + activationToken;
+        String activationLink = activationBaseUrl + activationToken;
         emailService.sendActivationEmail(savedUser.getEmail(), activationLink);
+
 
         // 등록 성공 응답 반환
         return new RegisterResponse("Registration successful. Please check your email to activate your account.",
@@ -140,6 +144,9 @@ public class AuthService {
         return new TokenResponse(newAccessToken);
     }
 
+    @Value("${app.activation-base-url}")
+    private String activationBaseUrl;
+
 
     public ActivationResponse activateAccount(String token) {
         Long userId = tokenService.validateActivationToken(token);
@@ -152,12 +159,15 @@ public class AuthService {
 
         if (!user.isActivated()) {
             user.activate();
-            userRepository.save(user);
+            //userRepository.save(user); -> @Transactional 어노테이션으로 인해 자동으로 저장됨
         }
 
-        return new ActivationResponse("Account successfully activated",
+        return new ActivationResponse(
+                "Account successfully activated",
                 user.getId().toString(),
-                user.getSubscriptionStatus().toString());
+                user.getSubscriptionStatus().name()
+        );
+
     }
 
     /**
@@ -167,10 +177,10 @@ public class AuthService {
      * @return LogoutResponse 로그아웃 결과를 포함한 응답 객체
      */
     public LogoutResponse logout(LogoutRequest request) {
-        if (request.isAllDevices()) {
-            tokenService.revokeAllRefreshTokens(request.getUserId());
+        if (request.allDevices()) {
+            tokenService.revokeAllRefreshTokens(request.userId());
         } else {
-            tokenService.revokeRefreshToken(request.getRefreshToken());
+            tokenService.revokeRefreshToken(request.refreshToken());
         }
 
         return new LogoutResponse("Successfully logged out");
