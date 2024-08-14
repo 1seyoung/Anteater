@@ -1,9 +1,19 @@
 package com.anteater.memberservice.auth.service;
 
-import com.anteater.memberservice.auth.exception.InvalidTokenException;
+import com.anteater.memberservice.auth.dto.AuthenticationResult;
+import com.anteater.memberservice.auth.dto.LoginRequest;
+import com.anteater.memberservice.auth.dto.LoginResponse;
 import com.anteater.memberservice.config.JwtConfig;
+import com.anteater.memberservice.entity.Member;
+import com.anteater.memberservice.entity.SubscriptionStatus;
+import com.anteater.memberservice.exception.InvalidTokenException;
+import com.anteater.memberservice.repository.MemberRepository;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -11,119 +21,56 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class TokenService {
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    private final JwtConfig jwtConfig;
-    private final RedisTemplate<String, String> redisTemplate;
-
-    public TokenService(JwtConfig jwtConfig, RedisTemplate<String, String> redisTemplate) {
-        this.jwtConfig = jwtConfig;
+    public TokenService(MemberRepository memberRepository,
+                        PasswordEncoder passwordEncoder,
+                        RedisTemplate<String, Object> redisTemplate) {
+        this.memberRepository = memberRepository;
+        this.passwordEncoder = passwordEncoder;
         this.redisTemplate = redisTemplate;
     }
 
-    public String generateAccessToken(Long userId, String username) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtConfig.getExpiration());
+    public AuthenticationResult authenticate(String username, String password) {
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return Jwts.builder()
-                .setSubject(Long.toString(userId))
-                .claim("username", username)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, jwtConfig.getSecret())
-                .compact();
+        if (!passwordEncoder.matches(password, member.getPassword())) {
+            throw new BadCredentialsException("Invalid password");
+        }
+
+        return new AuthenticationResult(
+                member.getId(),
+                member.getUsername(),
+                member.getSubscriptionStatus()
+        );
     }
 
-    public String generateRefreshToken(Long userId) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshTokenExpiration());
-
-        String refreshToken = Jwts.builder()
-                .setSubject(Long.toString(userId))
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, jwtConfig.getSecret())
-                .compact();
-
-        // Redis에 Refresh Token 저장
+    public void storeRefreshToken(Long userId, String refreshToken, long expirationTime) {
         redisTemplate.opsForValue().set(
-                "refresh_token:" + userId,
+                getRefreshTokenKey(userId),
                 refreshToken,
-                jwtConfig.getRefreshTokenExpiration(),
+                expirationTime,
                 TimeUnit.MILLISECONDS
         );
-
-        return refreshToken;
     }
 
-    public Long validateAccessToken(String token) {
-        try {
-            Claims claims = Jwts.parser()
-                    .setSigningKey(jwtConfig.getSecret())
-                    .parseClaimsJws(token)
-                    .getBody();
-
-            return Long.parseLong(claims.getSubject());
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new InvalidTokenException("Invalid JWT token");
-        }
+    public boolean validateRefreshToken(Long userId, String token) {
+        String storedToken = (String) redisTemplate.opsForValue().get(getRefreshTokenKey(userId));
+        return token.equals(storedToken);
     }
 
-    public Long validateRefreshToken(String token) {
-        try {
-            Jws<Claims> claimsJws = Jwts.parserBuilder()
-                    .setSigningKey(jwtConfig.getSecret().getBytes())
-                    .build()
-                    .parseClaimsJws(token);
-
-            Long userId = Long.parseLong(claimsJws.getBody().getSubject());
-            String storedToken = redisTemplate.opsForValue().get("refresh_token:" + userId);
-
-            if (!token.equals(storedToken)) {
-                throw new InvalidTokenException("Refresh token not found or not matched");
-            }
-
-            return userId;
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new InvalidTokenException("Invalid JWT token");
-        }
-    }
-
-    public void revokeRefreshToken(String token) {
-        Long userId = validateRefreshToken(token);
-        redisTemplate.delete("refresh_token:" + userId);
-    }
-
-    public void revokeAllRefreshTokens(Long userId) {
-        redisTemplate.delete("refresh_token:" + userId);
-    }
-    public String generateActivationToken(Long userId) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24시간 유효
-
-        return Jwts.builder()
-                .setSubject(Long.toString(userId))
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, jwtConfig.getSecret())
-                .compact();
-    }
-
-    public Long validateActivationToken(String token) {
-        try {
-            Jws<Claims> claimsJws = Jwts.parserBuilder()
-                    .setSigningKey(jwtConfig.getSecret().getBytes())
-                    .build()
-                    .parseClaimsJws(token);
-
-            Claims claims = claimsJws.getBody();
-            return Long.parseLong(claims.getSubject());
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new InvalidTokenException("Invalid JWT token");
-        }
+    public void revokeRefreshToken(Long userId) {
+        redisTemplate.delete(getRefreshTokenKey(userId));
     }
 
     public void logoutFromAllDevices(Long userId) {
-        // 사용자의 모든 Refresh 토큰을 무효화
-        redisTemplate.delete("refresh_token:" + userId);
+        redisTemplate.delete(getRefreshTokenKey(userId));
+    }
+
+    private String getRefreshTokenKey(Long userId) {
+        return "refresh_token:" + userId;
     }
 }
