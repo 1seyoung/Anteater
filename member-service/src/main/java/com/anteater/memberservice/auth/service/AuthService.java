@@ -1,18 +1,17 @@
 package com.anteater.memberservice.auth.service;
 
 import com.anteater.memberservice.auth.dto.*;
-import com.anteater.memberservice.entity.SubscriptionStatus;
 import com.anteater.memberservice.entity.Member;
-import com.anteater.memberservice.exception.*;
-import com.anteater.memberservice.auth.repository.AuthRepository;
-import com.anteater.memberservice.member.service.EmailService;
 import com.anteater.memberservice.repository.MemberRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.HashSet;
 
 /**
  * AuthService는 사용자 인증과 관련된 로직을 처리하는 서비스 클래스입니다.
@@ -23,10 +22,14 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenService tokenService;
 
-    public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(MemberRepository memberRepository,
+                       PasswordEncoder passwordEncoder,
+                       TokenService tokenService) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tokenService = tokenService;
     }
 
     public AuthenticationResult authenticate(LoginRequest request) {
@@ -37,10 +40,18 @@ public class AuthService {
             throw new BadCredentialsException("Invalid password");
         }
 
-        return new AuthenticationResult(
+        AuthenticationResult result = new AuthenticationResult(
                 member.getId(),
                 member.getUsername(),
-                member.getSubscriptionStatus()
+                member.isSubscribed(),
+                new HashSet<>(member.getRoles())
         );
+
+        String refreshToken = tokenService.generateRefreshToken();
+        long expirationTime = 7 * 24 * 60 * 60 * 1000; // 7일
+        tokenService.storeRefreshToken(member.getId(), refreshToken, expirationTime);
+
+        return result;
     }
 }
+

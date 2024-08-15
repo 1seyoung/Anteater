@@ -1,7 +1,6 @@
 package com.anteater.memberservice.auth.dto;
 
-
-public record LoginResponse(
+public record AuthenticationResponse(
         AuthenticationResult authResult,
         String refreshToken
 ) {}

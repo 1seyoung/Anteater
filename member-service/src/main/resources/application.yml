@@ -1,28 +1,7 @@
-app:
-  activation-base-url: http://yourdomain.com/activate?token=
+server:
+  port: 8081
 
 spring:
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}  # 환경 변수로 설정된 값 또는 application-secret.yml에서 가져올 값
-    password: ${MAIL_PASSWORD}  # 환경 변수로 설정된 값 또는 application-secret.yml에서 가져올 값
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-  config:
-    import: application-secret.yml  # application-secret.yml 파일을 추가로 불러옴
+  profiles:
+    default: local
 
-auth-code-expiration-millis: 1800000  # 30 * 60 * 1000 == 30분
-
-jwt:
-  expiration: 3600000 # 1 hour in milliseconds
-  secret: bf42ac7953a2f1d5479abc2ad8fc7510c627c88011251fd12b861d18e2059bfe74989766f77a4e4427fd621ca95c3c02a2b252090d517d5cb568ceb1a809a769
-  refresh-token-expiration: 604800000 # 7 days in milliseconds

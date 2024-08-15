@@ -1,9 +1,14 @@
 package com.anteater.memberservice.auth.dto;
 
-import com.anteater.memberservice.entity.SubscriptionStatus;
+import java.util.Set;
 
 public record AuthenticationResult(
         Long userId,
         String username,
-        SubscriptionStatus subscriptionStatus
-) {}
+        boolean isSubscribed,
+        Set<String> roles
+) {
+    public boolean hasRole(String role) {
+        return roles.contains(role);
+    }
+}

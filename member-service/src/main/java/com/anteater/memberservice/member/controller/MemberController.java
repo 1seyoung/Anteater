@@ -6,9 +6,8 @@ import com.anteater.memberservice.member.dto.request.*;
 import com.anteater.memberservice.member.dto.response.ActivationResponse;
 import com.anteater.memberservice.member.dto.response.PasswordChangeResponse;
 import com.anteater.memberservice.member.dto.response.RegisterResponse;
-import com.anteater.memberservice.member.dto.response.ResendActivationResponse;
 import com.anteater.memberservice.member.service.MemberService;
-import com.anteater.memberservice.profile.dto.ProfileResponse;
+import com.anteater.memberservice.member.dto.response.ProfileResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,61 +27,32 @@ public class MemberController {
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         RegisterResponse response = memberService.register(request);
         return ResponseEntity.ok(response);
-    }
+    }//[v]
     @GetMapping("/activate")
     public ResponseEntity<ActivationResponse> activateAccount(@RequestParam String token) {
         ActivationResponse response = memberService.activateAccount(token);
         return ResponseEntity.ok(response);
-    }
-    // 필요한 경우, 이메일 재전송을 위한 엔드포인트 추가
-    @PostMapping("/resend-activation")
-    public ResponseEntity<ResendActivationResponse> resendActivation(@RequestBody ResendActivationRequest request) {
-        ResendActivationResponse response = memberService.resendActivationEmail(request.email());
-        return ResponseEntity.ok(response);
-    }
+    }//[v]
 
-    /**
-     * 사용자 정보를 업데이트합니다.
-     *
-     * @param memberId 업데이트할 사용자의 ID
-     * @param request  사용자 정보 업데이트 요청 객체
-     * @return 업데이트 성공 시 응답 객체를 반환
-     */
-    @PutMapping("/{memberId}")
-    public ResponseEntity<Member> updateMember(@PathVariable Long memberId,
-                                               @Valid @RequestBody MemberUpdateRequest request) {
-        Member response = memberService.updateMemberInfo(memberId, request);
-        return ResponseEntity.ok(response);
-    }
 
-    /**
-     * 비밀번호 변경 요청을 처리합니다.
-     * @param memberId 비밀번호를 변경할 사용자의 ID
-     * @param request 비밀번호 변경 요청 객체
-     * @return 변경 성공 시 응답 객체를 반환
-     */
+
     @PostMapping("/{memberId}/change-password")
-    public ResponseEntity<PasswordChangeResponse> changePassword(@PathVariable Long memberId,
-                                                                 @Valid @RequestBody PasswordChangeRequest request) {
+    public ResponseEntity<PasswordChangeResponse> changePassword(
+            @PathVariable Long memberId,
+            @Valid @RequestBody PasswordChangeRequest request
+    ) {
         PasswordChangeResponse response = memberService.changePassword(memberId, request);
         return ResponseEntity.ok(response);
     }
 
+
     @PutMapping("/{memberId}/profile")
-    public ResponseEntity<ProfileResponse> updateProfile(@PathVariable Long memberId,
-                                                         @Valid @RequestBody ProfileUpdateRequest request) {
-        Member updatedMember = memberService.updateProfile(memberId, request);
-
-        ProfileResponse response = new ProfileResponse(
-                updatedMember.getUsername(),
-                updatedMember.getEmail(),
-                updatedMember.getBio(),
-                updatedMember.getProfileImg(),
-                updatedMember.getSubscriptionStatus()
-        );
-
+    public ResponseEntity<ProfileResponse> updateProfile(
+            @PathVariable Long memberId,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        ProfileResponse response = memberService.updateProfile(memberId, request);
         return ResponseEntity.ok(response);
     }
-
 
 }

@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  application:
+    name: api-gateway
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    gateway:
+      corsConfiguration:
+        '[/**]':
+          allowedOrigins: "*"
+          allowedMethods: "*"
+          allowedHeaders: "*"
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: member-service
+          uri: lb://member-service
+          predicates:
+            - Path=/api/members/**
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      repositories:
+        enabled: false
+
+jwt:
+  secret: bf42ac7953a2f1d5479abc2ad8fc7510c627c88011251fd12b861d18e2059bfe74989766f77a4e4427fd621ca95c3c02a2b252090d517d5cb568ceb1a809a769
+  expiration: 3600000 # 1 hour in milliseconds
+  refresh-token-expiration: 604800000 # 7 days in milliseconds
+
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
