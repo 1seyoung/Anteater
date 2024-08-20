@@ -37,3 +37,4 @@ out/
 .vscode/
 
 member-service/src/main/resources/application-secret.yml
+api-gateway/src/main/resources/application-secret.yml
