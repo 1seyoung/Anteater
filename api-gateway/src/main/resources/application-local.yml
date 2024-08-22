@@ -1,5 +1,6 @@
 spring:
   config:
+    import: application-secret.yml
     activate:
       on-profile: local
   data:
@@ -14,11 +15,19 @@ spring:
     allow-bean-definition-overriding: true
   cloud:
     gateway:
-      corsConfiguration:
-        '[/**]':
-          allowedOrigins: "*"
-          allowedMethods: "*"
-          allowedHeaders: "*"
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"  # 프론트엔드 개발 서버
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: '*'
+            allowCredentials: true
       discovery:
         locator:
           enabled: true
@@ -28,8 +37,9 @@ spring:
           predicates:
             - Path=/api/members/**
 
+
 jwt:
-  secret: bf42ac7953a2f1d5479abc2ad8fc7510c627c88011251fd12b861d18e2059bfe74989766f77a4e4427fd621ca95c3c02a2b252090d517d5cb568ceb1a809a769
+  secret : ${JWT_SECRET}
   expiration: 3600000 # 1 hour in milliseconds
   refresh-token-expiration: 604800000 # 7 days in milliseconds
 

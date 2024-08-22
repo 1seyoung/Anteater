@@ -23,11 +23,6 @@ public class JwtProperties {
      */
     private long expiration;
 
-    /**
-     * 리프레시 토큰의 만료 시간(밀리초)
-     * application.yml에서 'jwt.refresh-token-expiration' 속성으로 설정
-     */
-    private long refreshTokenExpiration;
 
     // Getter와 Setter 메서드
     // 이 메서드들을 사용하여 application.yml의 값을 자동으로 주입
@@ -49,11 +44,4 @@ public class JwtProperties {
         this.expiration = expiration;
     }
 
-    public long getRefreshTokenExpiration() {
-        return refreshTokenExpiration;
-    }
-
-    public void setRefreshTokenExpiration(long refreshTokenExpiration) {
-        this.refreshTokenExpiration = refreshTokenExpiration;
-    }
 }
