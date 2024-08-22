@@ -1,8 +1,8 @@
 package com.anteater.memberservice.member.service;
 
 import com.anteater.memberservice.member.dto.request.RegisterRequest;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -12,9 +12,10 @@ public class RedisTempStorageService implements TempStorageService {
     private final RedisTemplate<String, RegisterRequest> redisTemplate;
     private final long EXPIRATION_TIME = 24 * 60 * 60; // 24시간 (초 단위)
 
-    public RedisTempStorageService(RedisTemplate<String, RegisterRequest> redisTemplate) {
+    public RedisTempStorageService(@Qualifier("memberServiceRedisTemplate") RedisTemplate<String, RegisterRequest> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
+
 
     @Override
     public void saveRegistrationInfo(String token, RegisterRequest request) {

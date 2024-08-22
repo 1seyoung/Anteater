@@ -28,6 +28,8 @@ public class MemberController {
         RegisterResponse response = memberService.register(request);
         return ResponseEntity.ok(response);
     }//[v]
+
+
     @GetMapping("/activate")
     public ResponseEntity<ActivationResponse> activateAccount(@RequestParam String token) {
         ActivationResponse response = memberService.activateAccount(token);

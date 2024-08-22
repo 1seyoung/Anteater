@@ -10,6 +10,7 @@ import com.anteater.memberservice.member.dto.response.PasswordChangeResponse;
 import com.anteater.memberservice.member.dto.response.RegisterResponse;
 import com.anteater.memberservice.member.dto.response.ProfileResponse;
 import com.anteater.memberservice.repository.MemberRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,8 @@ import java.util.UUID;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
+    @Autowired
+    private EmailService emailService;
     private final TransactionTemplate transactionTemplate;
     private final TempStorageService tempStorageService;
 
@@ -93,8 +95,8 @@ public class MemberService {
     }
 
 
-
-    @Transactional
+    //public 접근제어자-> 외부접근 가능, ActivationResponse 반환
+    @Transactional // 메서드가 트랜잭션 내에서 실행되어야 함을 의미 , 예외 발생 시 롤백
     public ActivationResponse activateAccount(String token) {
         RegisterRequest registrationInfo = tempStorageService.getRegistrationInfo(token);
         if (registrationInfo == null) {
@@ -103,17 +105,18 @@ public class MemberService {
 
         Member member = memberRepository.findByEmail(registrationInfo.email())
                 .orElseThrow(() -> new MemberNotFoundException("Member not found"));
-
-        if (!member.isEnabled()) {
-            member.activate();
-            memberRepository.save(member);
-            tempStorageService.removeRegistrationInfo(token);
+                // 조건이 만족 되지 않으면 지정된 예외 던짐
+        if (!member.isEnabled()) { // 계정이 활성화 되지 않았다면
+            member.activate(); // 활성화 시키고
+            memberRepository.save(member); // DB 업데이트
+            tempStorageService.removeRegistrationInfo(token); // 토큰을 임시 저장소에서 제거
         }
 
         return new ActivationResponse(
                 "Account successfully activated",
                 member.getId().toString(),
-                member.isSubscribed()
+                member.isSubscribed(),
+                member.addRole("USER")
         );
     }
 
@@ -145,6 +148,8 @@ public class MemberService {
             member.updateProfileImage(request.profileImage());
         }
 
+        member.updateUpdatedAt(); // 수정 시간 업데이트
+
         Member updatedMember = memberRepository.save(member);
 
         return new ProfileResponse(
@@ -152,7 +157,8 @@ public class MemberService {
                 updatedMember.getEmail(),
                 updatedMember.getBio(),
                 updatedMember.getProfileImage(),
-                updatedMember.isSubscribed()
+                updatedMember.isSubscribed(),
+                updatedMember.getUpdatedAt()
         );
     }
 

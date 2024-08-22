@@ -2,13 +2,12 @@ server:
   port: 8081
 
 spring:
+  application:
+    name: member-service
   config:
     import: application-secret.yml
     activate:
       on-profile: local
-
-  application:
-    name: member-service
   mail:
     host: smtp.gmail.com
     port: 587
@@ -54,11 +53,11 @@ eureka:
 
 app:
 #  activation-base-url: http://yourdomain.com/activate?token=
- activation-base-url: http://192.168.0.10:8081/api/members/activate?token=
+ activation-base-url: http://localhost:8081/api/members/activate?token=
 
 auth-code-expiration-millis: 1800000  # 30분
 
 jwt:
-  secret: bf42ac7953a2f1d5479abc2ad8fc7510c627c88011251fd12b861d18e2059bfe74989766f77a4e4427fd621ca95c3c02a2b252090d517d5cb568ceb1a809a769
+  secret: ${JWT_SECRET}
   expiration: 3600000  # 1시간
   refresh-token-expiration: 604800000  # 7일

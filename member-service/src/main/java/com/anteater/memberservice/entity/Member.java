@@ -10,8 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "members")
@@ -43,15 +42,13 @@ public class Member {
 
     @Getter
     @Column(nullable = false)
-    private boolean enabled = false;  // 새로 추가된 필드
+    private boolean enabled = false;  // 새로 추가된 필드 -> 활성화 체크용
 
     @Column(nullable = false)
     private boolean isSubscribed = false; // 구독 여부를 나타내는 필드
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
-    private Set<String> roles = new HashSet<>();
+    private String role = ""; // 기본 역할 설정
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -61,12 +58,22 @@ public class Member {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    // 08.22 리프레시 토큰 저장을 위한 필드 추가
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
+    @Column(name = "refresh_token_expiry")
+    private LocalDateTime refreshTokenExpiry;
+
+
     public Member(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.enabled = false;
         this.isSubscribed = false;
+        this.initializeCreatedAt();
+        this.updateUpdatedAt();
     }
 
     public boolean isSubscribed() {
@@ -77,24 +84,31 @@ public class Member {
         if (this.isSubscribed != subscribed) {
             this.isSubscribed = subscribed;
             if (subscribed) {
-                this.roles.add("ROLE_SUBSCRIBER");
+                addRole("ROLE_SUBSCRIBER");
             } else {
-                this.roles.remove("ROLE_SUBSCRIBER");
+                removeRole("ROLE_SUBSCRIBER");
             }
         }
-    }  // 구독에 따른 권한 설정(구독자인 경우 ROLE_SUBSCRIBER 권한을 부여)
+    }
 
-    public void addRole(String role) {
-        this.roles.add(role);
-    } // 권한 추가
+    public String addRole(String newRole) {
+        if (!this.role.equals(newRole)) {
+            this.role = newRole;
+        }
+        return this.role;
+    }
+    //초기 : addRole 메서드는 void를 반환
+    //수정 이유 : ActivationResponse 생성자에서는 이 메서드의 반환값을 String 타입의 매개변수로 전달,  이로 인해 타입 불일치 오류
 
-    public void removeRole(String role) {
-        this.roles.remove(role);
-    } // 권한 제거
+    public void removeRole(String roleToRemove) {
+        if (this.role.equals(roleToRemove)) {
+            this.role = "USER"; // 역할 제거 시 기본 역할로 설정
+        }
+    }
 
-    public boolean hasRole(String role) {
-        return this.roles.contains(role);
-    } // 특정 권한을 가지고 있는지 확인
+    public boolean hasRole(String roleToCheck) {
+        return this.role.equals(roleToCheck);
+    }
 
 
     public void activate() {
@@ -132,5 +146,36 @@ public class Member {
         }
         this.bio = newBio;
     }//자기 소개 변경
+
+    // createdAt은 생성 시점에만 설정되도록 합니다.
+    protected void initializeCreatedAt() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+    }
+
+
+    public void updateUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // 08.22 리프레시 토큰 관련 메서드 추가
+    public void setRefreshToken(String refreshToken, LocalDateTime expiry) {
+        this.refreshToken = refreshToken;
+        this.refreshTokenExpiry = expiry;
+        this.updateUpdatedAt();
+    }
+
+    public void clearRefreshToken() {
+        this.refreshToken = null;
+        this.refreshTokenExpiry = null;
+        this.updateUpdatedAt();
+    }
+
+    public boolean isRefreshTokenValid() {
+        return this.refreshToken != null &&
+                this.refreshTokenExpiry != null &&
+                this.refreshTokenExpiry.isAfter(LocalDateTime.now());
+    }
 
 }

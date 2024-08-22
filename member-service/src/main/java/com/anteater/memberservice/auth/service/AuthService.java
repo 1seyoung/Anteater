@@ -40,11 +40,13 @@ public class AuthService {
             throw new BadCredentialsException("Invalid password");
         }
 
+
+
         AuthenticationResult result = new AuthenticationResult(
                 member.getId(),
                 member.getUsername(),
                 member.isSubscribed(),
-                new HashSet<>(member.getRoles())
+                member.getRole() // 단일 문자열 역할 직접 전달
         );
 
         String refreshToken = tokenService.generateRefreshToken();

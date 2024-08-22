@@ -13,8 +13,13 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByUsername(String username);
     Optional<Member> findByEmail(String email);
+    Optional<Member> findByRefreshToken(String refreshToken); // 08.22 리프레시 토큰 저장용 추가
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+
+
+    @Query("SELECT m FROM Member m WHERE m.refreshToken = :token AND m.refreshTokenExpiry > CURRENT_TIMESTAMP")
+    Optional<Member> findByValidRefreshToken(@Param("token") String token);
 
     @Query("SELECT m FROM Member m WHERE m.email = :identifier OR m.username = :identifier")
     Optional<Member> findByEmailOrUsername(@Param("identifier") String identifier);

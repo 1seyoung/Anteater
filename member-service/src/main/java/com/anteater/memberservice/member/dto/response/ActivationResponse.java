@@ -1,7 +1,7 @@
 package com.anteater.memberservice.member.dto.response;
 
 
-public record ActivationResponse(String message, String userId, boolean subscriptionStatus) {
+public record ActivationResponse(String message, String userId, boolean subscriptionStatus, String role) {
 }
 
 

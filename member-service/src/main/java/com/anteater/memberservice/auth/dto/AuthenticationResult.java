@@ -6,9 +6,9 @@ public record AuthenticationResult(
         Long userId,
         String username,
         boolean isSubscribed,
-        Set<String> roles
+        String role
 ) {
-    public boolean hasRole(String role) {
-        return roles.contains(role);
+    public boolean hasRole(String roleToCheck) {
+        return role.equals(roleToCheck);
     }
 }
