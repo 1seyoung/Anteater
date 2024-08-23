@@ -1,8 +1,8 @@
 package com.anteater.memberservice.auth.service;
 
-import com.anteater.memberservice.entity.Member;
-import com.anteater.memberservice.entity.SecurityUser;
-import com.anteater.memberservice.repository.MemberRepository;
+import com.anteater.memberservice.common.entity.Member;
+import com.anteater.memberservice.common.entity.SecurityUser;
+import com.anteater.memberservice.common.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

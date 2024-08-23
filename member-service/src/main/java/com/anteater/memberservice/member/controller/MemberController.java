@@ -1,7 +1,6 @@
 package com.anteater.memberservice.member.controller;
 
 
-import com.anteater.memberservice.entity.Member;
 import com.anteater.memberservice.member.dto.request.*;
 import com.anteater.memberservice.member.dto.response.ActivationResponse;
 import com.anteater.memberservice.member.dto.response.PasswordChangeResponse;

@@ -1,4 +1,4 @@
-package com.anteater.memberservice.exception;
+package com.anteater.memberservice.common.exception;
 
 public class RegistrationFailedException extends RuntimeException {
     public RegistrationFailedException(String message) {

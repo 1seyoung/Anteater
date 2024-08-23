@@ -1,11 +1,9 @@
 package com.anteater.memberservice.profile.service;
 
-import com.anteater.memberservice.entity.Member;
-import com.anteater.memberservice.exception.MemberNotFoundException;
-import com.anteater.memberservice.exception.UserNotFoundException;
-import com.anteater.memberservice.member.dto.response.ProfileResponse;
+import com.anteater.memberservice.common.entity.Member;
+import com.anteater.memberservice.common.exception.MemberNotFoundException;
 import com.anteater.memberservice.profile.dto.ProfileDTO;
-import com.anteater.memberservice.repository.MemberRepository;
+import com.anteater.memberservice.common.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

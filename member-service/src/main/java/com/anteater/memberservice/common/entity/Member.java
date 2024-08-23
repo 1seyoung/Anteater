@@ -1,4 +1,4 @@
-package com.anteater.memberservice.entity;
+package com.anteater.memberservice.common.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -10,7 +10,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.*;
 
 @Entity
 @Table(name = "members")

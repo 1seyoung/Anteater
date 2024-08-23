@@ -1,15 +1,16 @@
 package com.anteater.memberservice.member.service;
 
-import com.anteater.memberservice.exception.*;
+import com.anteater.memberservice.common.exception.*;
+import com.anteater.memberservice.common.util.EmailUtil;
 import com.anteater.memberservice.member.dto.request.PasswordChangeRequest;
 import com.anteater.memberservice.member.dto.request.UpdateProfileRequest;
 import com.anteater.memberservice.member.dto.response.ActivationResponse;
-import com.anteater.memberservice.entity.Member;
+import com.anteater.memberservice.common.entity.Member;
 import com.anteater.memberservice.member.dto.request.RegisterRequest;
 import com.anteater.memberservice.member.dto.response.PasswordChangeResponse;
 import com.anteater.memberservice.member.dto.response.RegisterResponse;
 import com.anteater.memberservice.member.dto.response.ProfileResponse;
-import com.anteater.memberservice.repository.MemberRepository;
+import com.anteater.memberservice.common.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     @Autowired
-    private EmailService emailService;
+    private EmailUtil emailUtil;
     private final TransactionTemplate transactionTemplate;
     private final TempStorageService tempStorageService;
 
@@ -35,10 +36,10 @@ public class MemberService {
 
     //의존성 주입을 통해 필요한 서비스들(회원 저장소, 비밀번호 인코더, 이메일 서비스)을 초기화
     public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
-                         EmailService emailService, TransactionTemplate transactionTemplate, TempStorageService tempStorageService) {
+                         EmailUtil emailUtil, TransactionTemplate transactionTemplate, TempStorageService tempStorageService) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
-        this.emailService = emailService;
+        this.emailUtil = emailUtil;
         this.transactionTemplate = transactionTemplate;
         this.tempStorageService = tempStorageService;
     }
@@ -76,7 +77,7 @@ public class MemberService {
                 Member savedMember = memberRepository.save(newMember);
 
                 // 7. 활성화 링크 이메일 전송
-                emailService.sendActivationEmail(savedMember.getEmail(), activationLink);
+                emailUtil.sendActivationEmail(savedMember.getEmail(), activationLink);
 
                 // 8. 응답 생성 및 반환
                 return new RegisterResponse(

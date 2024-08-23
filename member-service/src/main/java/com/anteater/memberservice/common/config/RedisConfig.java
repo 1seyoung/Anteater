@@ -1,4 +1,4 @@
-package com.anteater.memberservice.config;
+package com.anteater.memberservice.common.config;
 
 import com.anteater.memberservice.member.dto.request.RegisterRequest;
 import org.springframework.beans.factory.annotation.Value;

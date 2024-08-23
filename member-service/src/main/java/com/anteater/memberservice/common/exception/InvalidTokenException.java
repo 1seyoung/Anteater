@@ -1,4 +1,4 @@
-package com.anteater.memberservice.exception;
+package com.anteater.memberservice.common.exception;
 
 public class InvalidTokenException extends RuntimeException {
     public InvalidTokenException(String message) {

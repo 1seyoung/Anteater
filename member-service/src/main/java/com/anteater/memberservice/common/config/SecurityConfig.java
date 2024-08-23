@@ -1,4 +1,4 @@
-package com.anteater.memberservice.config;
+package com.anteater.memberservice.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

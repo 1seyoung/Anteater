@@ -1,6 +1,6 @@
-package com.anteater.memberservice.repository;
+package com.anteater.memberservice.common.repository;
 
-import com.anteater.memberservice.entity.Member;
+import com.anteater.memberservice.common.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
