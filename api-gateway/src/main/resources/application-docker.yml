@@ -57,3 +57,11 @@ eureka:
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 30  # 갱신 주기 설정 (기본값은 30초)
+
+
+public:
+  paths:
+    - /public/
+    - /api/auth/login
+    - /api/members/register
+    - /api/members/activate
