@@ -1,10 +1,14 @@
 package com.anteater.apigateway.config;
 
 import com.anteater.apigateway.jwt.JwtAuthFilter;
+import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
 
 @Configuration
 public class RouteConfig {
@@ -15,12 +19,23 @@ public class RouteConfig {
     }
 
     @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder, RedisRateLimiter redisRateLimiter) {
         return builder.routes()
+                .route("member_service", r -> r.path("/api/auth/refresh")
+                        .filters(f -> f
+                                .filter((exchange, chain) -> {
+                                    String refreshHeader = exchange.getRequest().getHeaders().getFirst("X-Refresh-Token");
+                                    if ("true".equalsIgnoreCase(refreshHeader)) {
+                                        return chain.filter(exchange);
+                                    }
+                                    return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid refresh request"));
+                                }))
+                        .uri("lb://member-service"))
                 .route("member_service", r -> r.path("/api/auth/**", "/api/members/**")
                         .filters(f -> f.filter(jwtAuthFilter.apply(new JwtAuthFilter.Config())))
                         .uri("lb://member-service"))
                 // 다른 서비스들에 대한 라우트 추가
+
                 .build();
     }
 }
