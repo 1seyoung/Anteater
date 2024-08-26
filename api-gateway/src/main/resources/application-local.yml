@@ -60,3 +60,13 @@ feign:
         connectTimeout: 5000
         readTimeout: 5000
         loggerLevel: basic
+
+
+
+
+public:
+  paths:
+    - /public/
+    - /api/auth/login
+    - /api/members/register
+    - /api/members/activate
