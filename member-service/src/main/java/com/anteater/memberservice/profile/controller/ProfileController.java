@@ -1,6 +1,5 @@
 package com.anteater.memberservice.profile.controller;
 
-import com.anteater.memberservice.member.dto.response.ProfileResponse;
 import com.anteater.memberservice.profile.dto.ProfileDTO;
 import com.anteater.memberservice.profile.service.ProfileService;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/profiles")
+@RequestMapping("/profiles")
 public class ProfileController {
 
     private final ProfileService profileService;

@@ -28,6 +28,10 @@ public class Member {
     @Column(nullable = false, unique = true)
     private String email;
 
+
+    @Column(nullable = false)
+    private String displayName;
+
     @JsonIgnore
     @Column(nullable = false)
     private String password;
@@ -57,12 +61,7 @@ public class Member {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    // 08.22 리프레시 토큰 저장을 위한 필드 추가
-    @Column(name = "refresh_token")
-    private String refreshToken;
 
-    @Column(name = "refresh_token_expiry")
-    private LocalDateTime refreshTokenExpiry;
 
 
     public Member(String username, String email, String password) {
@@ -158,23 +157,22 @@ public class Member {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // 08.22 리프레시 토큰 관련 메서드 추가
-    public void setRefreshToken(String refreshToken, LocalDateTime expiry) {
-        this.refreshToken = refreshToken;
-        this.refreshTokenExpiry = expiry;
-        this.updateUpdatedAt();
-    }
 
-    public void clearRefreshToken() {
-        this.refreshToken = null;
-        this.refreshTokenExpiry = null;
-        this.updateUpdatedAt();
-    }
+    public void updateProfile(String displayName, String bio, String profileImage) {
+        if (displayName != null && !displayName.trim().isEmpty()) {
+            this.displayName = displayName;
+        }
+        if (bio != null) {
+            if (bio.length() > 500) {
+                throw new IllegalArgumentException("Bio cannot exceed 500 characters");
+            }
+            this.bio = bio;
+        }
 
-    public boolean isRefreshTokenValid() {
-        return this.refreshToken != null &&
-                this.refreshTokenExpiry != null &&
-                this.refreshTokenExpiry.isAfter(LocalDateTime.now());
+        if (profileImage != null) {
+            this.profileImage = profileImage;
+        }
+        this.updateUpdatedAt();
     }
 
 }

@@ -3,8 +3,6 @@ package com.anteater.memberservice.auth.service;
 import com.anteater.memberservice.auth.dto.*;
 import com.anteater.memberservice.common.entity.Member;
 import com.anteater.memberservice.common.repository.MemberRepository;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +25,18 @@ public class AuthService {
         this.tokenService = tokenService;
     }
 
+
+
+    public LoginResponseDto authenticate(LoginRequestDto request) {
+        Member member = memberRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Invalid Username"));
+
+        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+            throw new RuntimeException("Invalid Password");
+        }
+
+        return tokenService.generateTokenPair(member.getUsername());
+    }
 
 }
 

@@ -1,15 +1,17 @@
 package com.anteater.memberservice.member.service;
 
 import com.anteater.memberservice.common.exception.*;
+import com.anteater.memberservice.common.redis.RedisTempStorageService;
 import com.anteater.memberservice.common.util.EmailUtil;
+import com.anteater.memberservice.common.util.JwtUtil;
 import com.anteater.memberservice.member.dto.request.PasswordChangeRequest;
-import com.anteater.memberservice.member.dto.request.UpdateProfileRequest;
+import com.anteater.memberservice.member.dto.request.ProfileRequestUpdateDTO;
 import com.anteater.memberservice.member.dto.response.ActivationResponse;
 import com.anteater.memberservice.common.entity.Member;
 import com.anteater.memberservice.member.dto.request.RegisterRequest;
 import com.anteater.memberservice.member.dto.response.PasswordChangeResponse;
+import com.anteater.memberservice.member.dto.response.ProfileUpdateResponseDTO;
 import com.anteater.memberservice.member.dto.response.RegisterResponse;
-import com.anteater.memberservice.member.dto.response.ProfileResponse;
 import com.anteater.memberservice.common.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,10 +27,12 @@ import java.util.UUID;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
     @Autowired
     private EmailUtil emailUtil;
     private final TransactionTemplate transactionTemplate;
-    private final TempStorageService tempStorageService;
+    private final RedisTempStorageService<RegisterRequest> redisTempStorageService;
 
     @Value("${app.activation-base-url}")
     private String activationBaseUrl;
@@ -36,13 +40,15 @@ public class MemberService {
 
     //의존성 주입을 통해 필요한 서비스들(회원 저장소, 비밀번호 인코더, 이메일 서비스)을 초기화
     public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
-                         EmailUtil emailUtil, TransactionTemplate transactionTemplate, TempStorageService tempStorageService) {
+                         EmailUtil emailUtil, TransactionTemplate transactionTemplate, RedisTempStorageService<RegisterRequest> redisTempStorageService , JwtUtil jwtUtil) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailUtil = emailUtil;
         this.transactionTemplate = transactionTemplate;
-        this.tempStorageService = tempStorageService;
+        this.redisTempStorageService = redisTempStorageService;
+        this.jwtUtil = jwtUtil;
     }
+
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -62,13 +68,13 @@ public class MemberService {
                         request.email(),
                         passwordEncoder.encode(request.password())
                 );
-                newMember.deactivate();;  // 이메일 인증 전이므로 비활성화 상태로 설정
+                newMember.deactivate();  // 이메일 인증 전이므로 비활성화 상태로 설정
 
                 // 3. 이메일 인증 토큰 생성
                 String activationToken = generateActivationToken();
 
-                // 4. 임시 저장소에 등록 정보 저장
-                tempStorageService.saveRegistrationInfo(activationToken, request);
+                // 4. 임시 저장소에 이메일과 토큰 저장
+                redisTempStorageService.save(activationToken, request, 60 * 60 * 24); // 24시간 유효
 
                 // 5. 활성화 링크 생성
                 String activationLink = activationBaseUrl + activationToken;
@@ -99,7 +105,9 @@ public class MemberService {
     //public 접근제어자-> 외부접근 가능, ActivationResponse 반환
     @Transactional // 메서드가 트랜잭션 내에서 실행되어야 함을 의미 , 예외 발생 시 롤백
     public ActivationResponse activateAccount(String token) {
-        RegisterRequest registrationInfo = tempStorageService.getRegistrationInfo(token);
+
+        // 1. 임시 저장소에서 토큰으로 회원 정보 조회
+        RegisterRequest registrationInfo = redisTempStorageService.get(token);
         if (registrationInfo == null) {
             throw new InvalidTokenException("Invalid or expired activation token");
         }
@@ -110,7 +118,9 @@ public class MemberService {
         if (!member.isEnabled()) { // 계정이 활성화 되지 않았다면
             member.activate(); // 활성화 시키고
             memberRepository.save(member); // DB 업데이트
-            tempStorageService.removeRegistrationInfo(token); // 토큰을 임시 저장소에서 제거
+
+            // 임시 저장소에서 토큰 삭제
+            redisTempStorageService.remove(token);
         }
 
         return new ActivationResponse(
@@ -122,8 +132,9 @@ public class MemberService {
     }
 
     @Transactional
-    public PasswordChangeResponse changePassword(Long memberId, PasswordChangeRequest request) {
-        Member member = memberRepository.findById(memberId)
+    public PasswordChangeResponse changePassword(String token, PasswordChangeRequest request) {
+        String username = extractUsernameFromToken(token);
+        Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new MemberNotFoundException("Member not found"));
 
         if (!passwordEncoder.matches(request.currentPassword(), member.getPassword())) {
@@ -131,41 +142,40 @@ public class MemberService {
         }
 
         member.changePassword(passwordEncoder.encode(request.newPassword()));
-        memberRepository.save(member);
 
         return new PasswordChangeResponse("Password changed successfully");
     }
 
+    public ProfileUpdateResponseDTO updateProfile(String token, ProfileRequestUpdateDTO updateDTO) {
+        String username = extractUsernameFromToken(token);
+        Member member = memberRepository.findByUsername(username)
 
-    @Transactional
-    public ProfileResponse updateProfile(Long memberId, UpdateProfileRequest request) {
-        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException("Member not found"));
 
-        if (request.bio() != null) {
-            member.updateBio(request.bio());
-        }
-        if (request.profileImage() != null) {
-            member.updateProfileImage(request.profileImage());
-        }
+        member.updateProfile(
+                updateDTO.displayName(),
+                updateDTO.bio(),
+                updateDTO.profileImage()
+        );
 
-        member.updateUpdatedAt(); // 수정 시간 업데이트
-
-        Member updatedMember = memberRepository.save(member);
-
-        return new ProfileResponse(
-                updatedMember.getUsername(),
-                updatedMember.getEmail(),
-                updatedMember.getBio(),
-                updatedMember.getProfileImage(),
-                updatedMember.isSubscribed(),
-                updatedMember.getUpdatedAt()
+        return new ProfileUpdateResponseDTO(
+                member.getUsername(),
+                member.getDisplayName(),
+                member.getEmail(),
+                member.getBio(),
+                member.getProfileImage(),
+                member.getUpdatedAt()
         );
     }
 
 
-
+    private String extractUsernameFromToken(String token) {
+        String bearerToken = token.replace("Bearer ", "");
+        return jwtUtil.extractUsername(bearerToken);
+    }
     private String generateActivationToken() {
         return UUID.randomUUID().toString();
     }
+
+
 }
