@@ -1,14 +1,11 @@
 package com.anteater.memberservice.auth.service;
 
 import com.anteater.memberservice.auth.dto.LoginResponseDto;
-import com.anteater.memberservice.common.config.JwtConfig;
 
 import com.anteater.memberservice.common.redis.RedisTempStorageService;
 
-import com.anteater.memberservice.common.repository.MemberRepository;
 import com.anteater.memberservice.common.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

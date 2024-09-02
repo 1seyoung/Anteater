@@ -39,7 +39,6 @@ public class AuthController {
     //ACCESS TOKEN 이 만료되었을 때 아직 리프레시 토큰이 유효한지 확인하는 로직
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestHeader("X-Auth-Username") String username) {
-        System.out.println("refreshToken:QQQ:"+username);
         try {
             String newAccessToken = tokenService.refreshAccessToken(username);
             return ResponseEntity.ok(TokenRefreshResponseDto.success(newAccessToken));

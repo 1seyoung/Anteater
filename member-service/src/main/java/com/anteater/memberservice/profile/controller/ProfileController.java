@@ -12,15 +12,4 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/profiles")
 public class ProfileController {
 
-    private final ProfileService profileService;
-
-    public ProfileController(ProfileService profileService) {
-        this.profileService = profileService;
-    }
-
-    @GetMapping("/{memberId}")
-    public ResponseEntity<ProfileDTO> getProfile(@PathVariable Long memberId) {
-        ProfileDTO profile = profileService.getProfile(memberId);
-        return ResponseEntity.ok(profile);
-    }
 }

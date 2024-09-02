@@ -7,5 +7,5 @@ public record ProfileDTO(
         String profileImage,
         boolean isSubscribed
 ) {
-    // 생성자는 record에 의해 자동으로 생성
+    // 생성자는 record에 의해 자동으로 생성됩니다.
 }
