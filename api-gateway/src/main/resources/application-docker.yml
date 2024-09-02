@@ -25,6 +25,13 @@ spring:
   cloud:
     gateway:
       routes :
+        - id: refresh-token
+          uri: lb://member-service
+          predicates:
+            - Path=/api/auth/refresh
+          filters:
+            - StripPrefix=1
+            - name: AccessTokenFilter
         - id : member-service
           uri : lb://member-service
           predicates:
@@ -37,13 +44,7 @@ spring:
                 - "/auth/login"
                 - "/members/register"
                 - "/members/activate"
-        - id: refresh-token
-          uri: lb://member-service
-          predicates:
-            - Path=/api/auth/refresh
-          filters:
-            - StripPrefix=1
-            - name: AccessTokenFilter
+
 
       default-filters:
         - name : GlobalFilter

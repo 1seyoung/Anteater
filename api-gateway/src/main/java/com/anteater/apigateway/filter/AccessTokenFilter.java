@@ -2,6 +2,8 @@ package com.anteater.apigateway.filter;
 
 import com.anteater.apigateway.jwt.JwtUtil;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
@@ -14,6 +16,8 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class AccessTokenFilter extends AbstractGatewayFilterFactory<AccessTokenFilter.Config> {
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
+
     //만료된 AccessToken을 재발급하는 API Gateway Filter
     private final JwtUtil jwtUtil;
 
@@ -26,27 +30,29 @@ public class AccessTokenFilter extends AbstractGatewayFilterFactory<AccessTokenF
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
+            log.debug("AccessTokenFilter: Processing request to {}", request.getPath());
+
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                log.warn("AccessTokenFilter: No Authorization header");
                 return onError(exchange, "No Authorization header", HttpStatus.UNAUTHORIZED);
             }
 
             String token = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-            if (token != null && token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            } else {
-                return onError(exchange, "Invalid Authorization header", HttpStatus.UNAUTHORIZED);
+            log.debug("AccessTokenFilter: Token received: {}", token);
+
+            try {
+                String username = jwtUtil.getUsernameFromToken(token.substring(7));
+                log.debug("AccessTokenFilter: Username extracted: {}", username);
+
+                ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
+                        .header("X-Auth-Username", username)
+                        .build();
+
+                return chain.filter(exchange.mutate().request(modifiedRequest).build());
+            } catch (Exception e) {
+                log.error("AccessTokenFilter: Error processing token", e);
+                return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
             }
-
-            String username = jwtUtil.getUsernameFromToken(token);
-            if (username == null) {
-                return onError(exchange, "Unable to extract username from token", HttpStatus.UNAUTHORIZED);
-            }
-
-            ServerHttpRequest modifiedRequest = request.mutate()
-                    .header("X-Auth-Username", username)
-                    .build();
-
-            return chain.filter(exchange.mutate().request(modifiedRequest).build());
         };
     }
 
