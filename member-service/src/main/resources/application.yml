@@ -3,5 +3,6 @@ server:
 
 spring:
   profiles:
-    default: docker
+    #default: docker
+    default: dev
 
