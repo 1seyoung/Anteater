@@ -50,7 +50,7 @@
 ![image](https://github.com/user-attachments/assets/af574540-8856-4e3d-8b5a-a7e967561cb8)
 
 ## 트러블 슈팅
-
+**인증/인가 트러블 슈팅 관련** : [멤버 서비스 시퀀스 다이어그램 바로 보기](https://github.com/1seyoung/Anteater/blob/main/member-service/README_MEMBER_SERVICE.md)
 <details>
 <summary> <H3>인증/인가(1) : Member Service: 회원 관리와 인증 기능 통합 사례</H3> </summary>
 
