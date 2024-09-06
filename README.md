@@ -17,6 +17,10 @@
 - [ ] 사람들이 많이 관심을 가지는 종목을 시각적으로 확인할 수 있는 대시보드 개발
 - [ ] 한국투자증권의 Open API를 활용하여 실시간 주식 데이터를 웹소켓으로 제공
 
+## Architecture
+
+
+
 ## Tech
 
 |  | Tech           | Usage                                           |
@@ -27,7 +31,9 @@
 |**Database** | MySQL   | 관계형 데이터베이스                         |
 |**ORM**|Spring Data JPA         |                                  |
 |**VCS**| Git  | 버전관리            |
-
+ | **Message Broker** | Kafka | 서비스 간 데이터 통신 (이벤트 기반) |
+| **API Gateway** | Spring Cloud Gateway | API 라우팅 및 필터링 |
+| **Service Discovery** | Spring Cloud Netflix Eureka | 서비스 디스커버리 및 로드 밸런싱 |
 
 
 ## 주요 기능 및 API
@@ -39,3 +45,7 @@
 | **Activity Service**      | 포스트 작성, 댓글 작성, 좋아요 클릭 API 제공                                           |
 | **Newsfeed Service**      | 활동 데이터를 카프카로 전송하여 뉴스피드 아이템 구성                                     |
 | **Stock Service**         | 관심 종목 팔로우, 종목 정보 관리 API 제공                                           |
+
+## ERD 
+![image](https://github.com/user-attachments/assets/af574540-8856-4e3d-8b5a-a7e967561cb8)
+
