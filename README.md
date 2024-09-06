@@ -1,5 +1,4 @@
-
-![image](https://github.com/user-attachments/assets/f06bb636-b399-40a4-a9db-902650218161)
+![image](https://github.com/user-attachments/assets/175fb4c6-601d-4380-83fb-ff4bc6fc16e6)
 
 # KOSPI 주식 종목 토론 커뮤니티 프로젝트
 프로젝트 기간 : 24/08/11 ~ 진행 중
