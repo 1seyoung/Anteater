@@ -1,8 +1,7 @@
+
+![image](https://github.com/user-attachments/assets/f06bb636-b399-40a4-a9db-902650218161)
+
 # KOSPI 주식 종목 토론 커뮤니티 프로젝트
-
-![image](https://github.com/user-attachments/assets/a3f4d047-124c-459e-9897-ddba0b22ca69)
-
-
 프로젝트 기간 : 24/08/11 ~ 진행 중
 
 - 사용자들이 KOSPI 주식 종목에 대한 의견을 나눌 수 있는 가상 주식 커뮤니티의 백엔드 API입니다.
