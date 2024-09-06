@@ -1,4 +1,7 @@
-# KOSPI 주식 종목 토론 커뮤니티 프로젝트                                                                                                                                    
+# KOSPI 주식 종목 토론 커뮤니티 프로젝트
+
+![image](https://github.com/user-attachments/assets/a3f4d047-124c-459e-9897-ddba0b22ca69)
+
 
 프로젝트 기간 : 24/08/11 ~ 진행 중
 
