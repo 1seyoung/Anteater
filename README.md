@@ -32,10 +32,12 @@
 |**Framework**|SpringBoot 3.3.3 |                    |
 |**Build**| Gradle     | 빌드툴                                    |
 |**Database** | MySQL   | 관계형 데이터베이스                         |
+|**Database** | Redis | |
 |**ORM**|Spring Data JPA         |                                  |
 |**VCS**| Git  | 버전관리            |
  | **Message Broker** | Kafka | 서비스 간 데이터 통신 (이벤트 기반) |
 | **API Gateway** | Spring Cloud Gateway | API 라우팅 및 필터링 |
+|**DevOps** | Docker | WAS 및 마이크로서비스에 필요한 의존성 컨테이너 구동 |
 | **Service Discovery** | Spring Cloud Netflix Eureka | 서비스 디스커버리 및 로드 밸런싱 |
 
 
