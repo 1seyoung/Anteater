@@ -21,7 +21,7 @@
 
 ## Architecture
 
-![image](https://github.com/user-attachments/assets/32bf5c7c-431b-4495-adfc-5e470ba8c5b4)
+![image](https://github.com/user-attachments/assets/66151d71-499d-4d12-b1ca-d02a944c4b68)
 
 
 ## Tech
