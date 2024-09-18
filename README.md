@@ -56,8 +56,7 @@
 
 ## 트러블 슈팅
 **인증/인가 트러블 슈팅 관련** : [멤버 서비스 시퀀스 다이어그램 바로 보기](https://github.com/1seyoung/Anteater/blob/main/member-service/README_MEMBER_SERVICE.md)
-<details>
-<summary> <H3>인증/인가(1) : Member Service: 회원 관리와 인증 기능 통합 사례</H3> </summary>
+<H3>인증/인가(1) : Member Service: 회원 관리와 인증 기능 통합 사례</H3>
 
 ****문제 정의****
 
@@ -98,11 +97,7 @@
 - 그러나 서비스가 커질수록, 이를 분리하는 것이 필요할 수도 있으므로 코드 모듈화와 아키텍처 확장 가능성을 염두에 두어야 함.
 - 추후 OAuth2와 같은 표준 인증 방식을 도입하거나, 인증 기능을 독립 서비스로 분리할 필요성이 있을 수 있음.
 
-</details>
-
-
-<details>
-<summary><H3>인증/인가(2) : API Gateway와 서비스 간 인증/인가 역할 분담</H3></summary>
+<H3>인증/인가(2) : API Gateway와 서비스 간 인증/인가 역할 분담</H3>
 
 **문제 정의**
 
@@ -140,13 +135,11 @@ API Gateway가 Access Token을 검증하고 인가(Authorization)의 역할까�
 - **인증(Authentication)**과 **인가(Authorization)**를 명확히 구분하여 처리하는 것이 중요함을 다시 한 번 깨달음.
 - API Gateway는 단순히 Access Token 검증과 요청 라우팅에 집중해야 하며, 세부적인 권한 관리는 각 서비스에서 처리하는 것이 더 유연하고 확장성이 좋다는 결론을 내림.
 
-</details>
 
 
 ## 기술적 의사결정
 
-<details>
-<summary><H3>Kafka 도입에 대한 결정</H3></summary>
+<H3>Kafka 도입에 대한 결정</H3>
 
 **1. 결정 배경**
 
@@ -184,4 +177,4 @@ API Gateway가 Access Token을 검증하고 인가(Authorization)의 역할까�
 
 Kafka는 가상 주식 커뮤니티 프로젝트에서 서비스 간의 데이터 교환을 처리하고, 추후 실시간 데이터 스트리밍을 원활하게 지원하기 위한 최적의 선택이다. 이벤트 기반 아키텍처와 실시간 데이터 처리가 필요한 프로젝트 요구사항에 가장 적합한 기술로 선택하였다.
 
-</details>
+
