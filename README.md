@@ -1,4 +1,3 @@
-프로젝트 기간 : 24/08/11 ~ 24/12
 ## Architecture
 
 ![image](https://github.com/user-attachments/assets/66151d71-499d-4d12-b1ca-d02a944c4b68)
